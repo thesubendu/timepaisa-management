@@ -1,0 +1,1959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Paisa Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #151b2e;
+            --bg-card: #1a2235;
+            --accent-time: #00f5d4;
+            --accent-money: #ffba08;
+            --accent-insight: #f15bb5;
+            --text-primary: #e8f1f5;
+            --text-secondary: #9db4c0;
+            --text-muted: #5b6f7a;
+            --border: #2a3548;
+            --success: #06ffa5;
+            --warning: #ff6b35;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #0d1423 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background elements */
+        .bg-decoration {
+            position: fixed;
+            pointer-events: none;
+            opacity: 0.03;
+            z-index: 0;
+        }
+
+        .bg-circle-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--accent-time), transparent);
+            top: -200px;
+            right: -200px;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .bg-circle-2 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, var(--accent-money), transparent);
+            bottom: -100px;
+            left: -100px;
+            animation: float 15s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -30px) scale(1.1); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 40px 20px 60px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 40px;
+            background: linear-gradient(180deg, rgba(0,245,212,0.05) 0%, transparent 100%);
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-time), var(--accent-money));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: -2px;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        .tagline {
+            font-family: 'Space Mono', monospace;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: fadeIn 0.8s ease-out 0.2s backwards;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 12px 28px;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            color: var(--text-secondary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0,245,212,0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .nav-btn:hover::before {
+            left: 100%;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--accent-time);
+            color: var(--accent-time);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, var(--accent-time), var(--accent-money));
+            color: var(--bg-primary);
+            border-color: transparent;
+            font-weight: 700;
+        }
+
+        /* Views */
+        .view {
+            display: none;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Card styling */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 48px rgba(0,245,212,0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .icon-time {
+            background: linear-gradient(135deg, var(--accent-time), #00c9b7);
+        }
+
+        .icon-money {
+            background: linear-gradient(135deg, var(--accent-money), #ff9500);
+        }
+
+        .icon-insight {
+            background: linear-gradient(135deg, var(--accent-insight), #c9184a);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            flex: 1;
+        }
+
+        /* Form elements */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-time);
+            box-shadow: 0 0 0 3px rgba(0,245,212,0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Slider styling */
+        .slider-group {
+            margin-bottom: 20px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .slider-label {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .slider-value {
+            font-family: 'Space Mono', monospace;
+            color: var(--accent-time);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: var(--bg-secondary);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-time), var(--accent-money));
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,245,212,0.4);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-time), var(--accent-money));
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,245,212,0.4);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-time), var(--accent-money));
+            color: var(--bg-primary);
+            box-shadow: 0 4px 16px rgba(0,245,212,0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(0,245,212,0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-time);
+            color: var(--accent-time);
+        }
+
+        /* Toggle switch */
+        .toggle-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-secondary);
+            transition: 0.4s;
+            border-radius: 30px;
+            border: 2px solid var(--border);
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--text-muted);
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background: linear-gradient(135deg, var(--accent-time), var(--accent-money));
+            border-color: transparent;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+            background-color: var(--bg-primary);
+        }
+
+        /* Stats display */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-time);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-time), var(--accent-money));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Chart */
+        .chart-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .chart-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .chart-row {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .chart-label {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .chart-bars-wrapper {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .chart-bar {
+            height: 32px;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s ease;
+        }
+
+        .chart-bar-planned {
+            background: linear-gradient(90deg, rgba(0,245,212,0.3), rgba(0,245,212,0.1));
+            border: 2px solid var(--accent-time);
+        }
+
+        .chart-bar-actual {
+            background: linear-gradient(90deg, rgba(255,186,8,0.3), rgba(255,186,8,0.1));
+            border: 2px solid var(--accent-money);
+        }
+
+        .chart-bar-value {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        /* AI Insight */
+        .insight-box {
+            background: linear-gradient(135deg, rgba(241,91,181,0.1), rgba(201,24,74,0.1));
+            border: 2px solid var(--accent-insight);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .insight-box::before {
+            content: '✨';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 3rem;
+            opacity: 0.2;
+        }
+
+        .insight-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--accent-insight);
+            margin-bottom: 16px;
+        }
+
+        .insight-content {
+            line-height: 1.8;
+            color: var(--text-primary);
+        }
+
+        .insight-section {
+            margin-bottom: 20px;
+        }
+
+        .insight-section-title {
+            font-weight: 700;
+            color: var(--accent-time);
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        /* Expense list */
+        .expense-list {
+            margin-top: 20px;
+        }
+
+        .expense-item {
+            background: var(--bg-secondary);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .expense-item:hover {
+            border-color: var(--accent-money);
+            transform: translateX(4px);
+        }
+
+        .expense-info {
+            flex: 1;
+        }
+
+        .expense-category {
+            font-weight: 600;
+            color: var(--accent-money);
+            margin-bottom: 4px;
+        }
+
+        .expense-date {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .expense-amount {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent-money);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .expense-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 12px;
+        }
+
+        .badge-impulse {
+            background: rgba(255,107,53,0.2);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .badge-planned {
+            background: rgba(6,255,165,0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--bg-secondary);
+            border-radius: 50%;
+            border-top-color: var(--accent-time);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Week selector */
+        .week-selector {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+        }
+
+        .week-nav {
+            display: flex;
+            gap: 12px;
+        }
+
+        .week-nav-btn {
+            padding: 10px 16px;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .week-nav-btn:hover {
+            border-color: var(--accent-time);
+            color: var(--accent-time);
+        }
+
+        .week-display {
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--accent-time);
+        }
+
+        /* Chat messages */
+        .chat-message {
+            display: flex;
+            gap: 12px;
+            animation: slideInMessage 0.3s ease-out;
+        }
+
+        @keyframes slideInMessage {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chat-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .user-avatar {
+            background: linear-gradient(135deg, var(--accent-time), var(--accent-money));
+        }
+
+        .bot-avatar {
+            background: linear-gradient(135deg, var(--accent-insight), #c9184a);
+        }
+
+        .chat-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            line-height: 1.6;
+            position: relative;
+        }
+
+        .user-bubble {
+            background: linear-gradient(135deg, rgba(0,245,212,0.15), rgba(0,201,183,0.15));
+            border: 1px solid rgba(0,245,212,0.3);
+            margin-left: auto;
+        }
+
+        .bot-bubble {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+        }
+
+        .chat-timestamp {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-insight);
+            animation: typingDot 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typingDot {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-10px); opacity: 1; }
+        }
+
+        #chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #chat-messages::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        #chat-messages::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        #chat-messages::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-time);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .chart-row {
+                grid-template-columns: 100px 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-btn {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+
+            .chat-bubble {
+                max-width: 90%;
+            }
+
+            #chat-messages {
+                height: 300px;
+            }
+        }
+
+        .summary-value {
+            color: var(--accent-time);
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-decoration bg-circle-1"></div>
+    <div class="bg-decoration bg-circle-2"></div>
+
+    <div class="container">
+        <header>
+            <h1>Time Paisa Manager</h1>
+            <p class="tagline">Behavior Mirror + Weekly Correction Tool</p>
+        </header>
+
+        <nav>
+            <button class="nav-btn active" onclick="showView('daily')">📊 Daily Log</button>
+            <button class="nav-btn" onclick="showView('expenses')">💰 Expenses</button>
+            <button class="nav-btn" onclick="showView('weekly-plan')">📅 Weekly Plan</button>
+            <button class="nav-btn" onclick="showView('insights')">✨ AI Insights</button>
+            <button class="nav-btn" onclick="showView('reflection')">🎯 Reflection</button>
+        </nav>
+
+        <!-- Daily Log View -->
+        <div id="daily" class="view active">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-time">⏱️</div>
+                    <h2 class="card-title">Daily Time Breakdown</h2>
+                </div>
+
+                <p style="color: var(--text-secondary); margin-bottom: 30px;">
+                    Where did your 24 hours go today? Slide to allocate your time honestly.
+                </p>
+
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">💼 Study / Work</span>
+                        <span class="slider-value"><span id="study-value">0</span>h</span>
+                    </div>
+                    <input type="range" id="study" min="0" max="24" value="0" step="0.5" oninput="updateSlider('study')">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">🎓 Classes / Lectures</span>
+                        <span class="slider-value"><span id="classes-value">0</span>h</span>
+                    </div>
+                    <input type="range" id="classes" min="0" max="24" value="0" step="0.5" oninput="updateSlider('classes')">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">📱 Scroll / Entertainment</span>
+                        <span class="slider-value"><span id="scroll-value">0</span>h</span>
+                    </div>
+                    <input type="range" id="scroll" min="0" max="24" value="0" step="0.5" oninput="updateSlider('scroll')">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">👥 Social / Outings</span>
+                        <span class="slider-value"><span id="social-value">0</span>h</span>
+                    </div>
+                    <input type="range" id="social" min="0" max="24" value="0" step="0.5" oninput="updateSlider('social')">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">😴 Sleep</span>
+                        <span class="slider-value"><span id="sleep-value">0</span>h</span>
+                    </div>
+                    <input type="range" id="sleep" min="0" max="24" value="0" step="0.5" oninput="updateSlider('sleep')">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">🔧 Other</span>
+                        <span class="slider-value"><span id="other-value">0</span>h</span>
+                    </div>
+                    <input type="range" id="other" min="0" max="24" value="0" step="0.5" oninput="updateSlider('other')">
+                </div>
+
+                <div style="margin-top: 30px; padding: 20px; background: var(--bg-secondary); border-radius: 12px; text-align: center;">
+                    <p style="color: var(--text-secondary); margin-bottom: 8px;">Total Hours Allocated</p>
+                    <p style="font-size: 2rem; font-weight: 800; color: var(--accent-time); font-family: 'Space Mono', monospace;">
+                        <span id="total-hours">0</span> / 24h
+                    </p>
+                    <p id="hours-warning" style="color: var(--warning); font-weight: 600; margin-top: 8px; display: none;">
+                        ⚠️ Total exceeds 24 hours!
+                    </p>
+                </div>
+
+                <button class="btn btn-primary" onclick="saveDailyLog()" style="width: 100%; margin-top: 30px;">
+                    Save Today's Log
+                </button>
+            </div>
+
+            <!-- Recent Logs -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-time">📈</div>
+                    <h2 class="card-title">This Week's Logs</h2>
+                </div>
+                <div id="recent-logs"></div>
+            </div>
+        </div>
+
+        <!-- Expenses View -->
+        <div id="expenses" class="view">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-money">💸</div>
+                    <h2 class="card-title">Track Spending</h2>
+                </div>
+
+                <p style="color: var(--text-secondary); margin-bottom: 30px;">
+                    Log your expenses - especially impulse buys that you didn't plan for.
+                </p>
+
+                <div class="form-group">
+                    <label>Amount (₹)</label>
+                    <input type="number" id="expense-amount" placeholder="100" min="0" step="1">
+                </div>
+
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="expense-category">
+                        <option value="Food">🍔 Food / Dining</option>
+                        <option value="Online">🛒 Online Shopping</option>
+                        <option value="Transport">🚗 Transport</option>
+                        <option value="Entertainment">🎬 Entertainment</option>
+                        <option value="Education">📚 Education</option>
+                        <option value="Other">🔧 Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Type</label>
+                    <div class="toggle-group">
+                        <span style="color: var(--text-secondary);">Planned</span>
+                        <label class="toggle">
+                            <input type="checkbox" id="expense-impulse">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span style="color: var(--warning); font-weight: 600;">Impulse Buy</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Note (Optional)</label>
+                    <input type="text" id="expense-note" placeholder="Coffee with friends...">
+                </div>
+
+                <button class="btn btn-primary" onclick="saveExpense()" style="width: 100%;">
+                    Add Expense
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-money">📊</div>
+                    <h2 class="card-title">This Week's Spending</h2>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-spent">₹0</div>
+                        <div class="stat-label">Total Spent</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="impulse-count">0</div>
+                        <div class="stat-label">Impulse Buys</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="impulse-amount">₹0</div>
+                        <div class="stat-label">Impulse Total</div>
+                    </div>
+                </div>
+
+                <div id="expense-list" class="expense-list"></div>
+            </div>
+        </div>
+
+        <!-- Weekly Plan View -->
+        <div id="weekly-plan" class="view">
+            <div class="week-selector">
+                <button class="week-nav-btn" onclick="changeWeek(-1)">← Previous</button>
+                <div class="week-display" id="week-display">Week of Jan 27, 2025</div>
+                <button class="week-nav-btn" onclick="changeWeek(1)">Next →</button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-time">📋</div>
+                    <h2 class="card-title">Plan Your Week</h2>
+                </div>
+
+                <p style="color: var(--text-secondary); margin-bottom: 30px;">
+                    Start with fixed commitments, then allocate time for what matters.
+                </p>
+
+                <div class="form-group">
+                    <label>Fixed Hours (Classes, Job, Commute)</label>
+                    <input type="number" id="plan-fixed" placeholder="25" min="0" max="168" value="25">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+                        Hours per week you cannot change
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label>Target Study/Work Hours</label>
+                    <input type="number" id="plan-study" placeholder="30" min="0" max="168" value="30">
+                </div>
+
+                <div class="form-group">
+                    <label>Sleep (per week)</label>
+                    <input type="number" id="plan-sleep" placeholder="49" min="0" max="168" value="49">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+                        7 hours × 7 days = 49 hours
+                    </p>
+                </div>
+
+                <div style="margin-top: 30px; padding: 24px; background: var(--bg-secondary); border-radius: 12px;">
+                    <h3 style="margin-bottom: 16px; color: var(--accent-time);">Weekly Breakdown</h3>
+                    <div style="display: grid; gap: 12px;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Total Hours in Week:</span>
+                            <span style="font-weight: 700;">168h</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Fixed Commitments:</span>
+                            <span style="font-weight: 700; color: var(--accent-time);" id="display-fixed">25h</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Planned Study:</span>
+                            <span style="font-weight: 700; color: var(--accent-time);" id="display-study">30h</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Sleep:</span>
+                            <span style="font-weight: 700; color: var(--accent-time);" id="display-sleep">49h</span>
+                        </div>
+                        <div style="border-top: 2px solid var(--border); margin: 8px 0; padding-top: 12px; display: flex; justify-content: space-between;">
+                            <span style="font-weight: 700;">Remaining Free Time:</span>
+                            <span style="font-weight: 800; font-size: 1.3rem; color: var(--accent-money);" id="display-remaining">64h</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="saveWeeklyPlan()" style="width: 100%; margin-top: 30px;">
+                    Save Weekly Plan
+                </button>
+            </div>
+        </div>
+
+        <!-- Insights View -->
+        <div id="insights" class="view">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-insight">✨</div>
+                    <h2 class="card-title">Chat with <span id="chatbot-name-display" contenteditable="true" style="color: var(--accent-insight); cursor: pointer; border-bottom: 2px dashed var(--accent-insight); padding: 2px 8px; border-radius: 4px;" onclick="editChatbotName()">Mitra</span></h2>
+                </div>
+
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Your AI behavior coach. Ask questions about your habits, get insights, or request advice.
+                </p>
+
+                <!-- Chatbot Interface -->
+                <div id="chat-container" style="background: var(--bg-secondary); border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px;">
+                    <div id="chat-messages" style="height: 400px; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+                        <!-- Messages will appear here -->
+                    </div>
+                    
+                    <div style="padding: 16px; border-top: 1px solid var(--border); display: flex; gap: 12px;">
+                        <input type="text" id="chat-input" placeholder="Ask about your time, money, or habits..." 
+                               style="flex: 1; margin: 0;" 
+                               onkeypress="if(event.key==='Enter') sendMessage()">
+                        <button class="btn btn-primary" onclick="sendMessage()" style="padding: 14px 24px; margin: 0;">
+                            Send
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 30px;">
+                    <button class="btn btn-secondary" onclick="askQuickQuestion('Show me this week summary')" 
+                            style="padding: 10px 16px; font-size: 0.9rem;">
+                        📊 Week Summary
+                    </button>
+                    <button class="btn btn-secondary" onclick="askQuickQuestion('What are my biggest time leaks?')" 
+                            style="padding: 10px 16px; font-size: 0.9rem;">
+                        ⏰ Time Leaks
+                    </button>
+                    <button class="btn btn-secondary" onclick="askQuickQuestion('Analyze my spending patterns')" 
+                            style="padding: 10px 16px; font-size: 0.9rem;">
+                        💰 Spending Analysis
+                    </button>
+                    <button class="btn btn-secondary" onclick="askQuickQuestion('Give me one actionable tip')" 
+                            style="padding: 10px 16px; font-size: 0.9rem;">
+                        💡 Quick Tip
+                    </button>
+                </div>
+            </div>
+
+            <!-- Plan vs Actual Comparison -->
+            <div class="card" id="comparison-card">
+                <div class="card-header">
+                    <div class="card-icon icon-time">📊</div>
+                    <h2 class="card-title">Plan vs Reality</h2>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-bars" id="comparison-chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reflection View -->
+        <div id="reflection" class="view">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-insight">🎯</div>
+                    <h2 class="card-title">Weekly Reflection</h2>
+                </div>
+
+                <p style="color: var(--text-secondary); margin-bottom: 30px;">
+                    Take a moment to reflect on your week and set an intention for next week.
+                </p>
+
+                <div class="form-group">
+                    <label>What caused the biggest drift from your plan?</label>
+                    <textarea id="reflection-drift" placeholder="Be honest with yourself..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>One specific change you will try next week</label>
+                    <textarea id="reflection-change" placeholder="Keep it small and actionable..."></textarea>
+                </div>
+
+                <button class="btn btn-primary" onclick="saveReflection()" style="width: 100%;">
+                    Save Reflection
+                </button>
+
+                <div id="past-reflections" style="margin-top: 40px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data storage using localStorage with 45-day retention
+        const RETENTION_DAYS = 45;
+
+        const storage = {
+            get: (key) => {
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : null;
+            },
+            set: (key, value) => {
+                localStorage.setItem(key, JSON.stringify(value));
+            },
+            append: (key, value) => {
+                const current = storage.get(key) || [];
+                current.push(value);
+                storage.set(key, current);
+            },
+            cleanup: () => {
+                const cutoffDate = new Date();
+                cutoffDate.setDate(cutoffDate.getDate() - RETENTION_DAYS);
+                const cutoffStr = formatDate(cutoffDate);
+
+                // Clean up daily logs
+                const logs = storage.get('dailyLogs') || [];
+                const filteredLogs = logs.filter(log => log.date >= cutoffStr);
+                storage.set('dailyLogs', filteredLogs);
+
+                // Clean up expenses
+                const expenses = storage.get('expenses') || [];
+                const filteredExpenses = expenses.filter(exp => exp.date >= cutoffStr);
+                storage.set('expenses', filteredExpenses);
+
+                // Clean up reflections
+                const reflections = storage.get('reflections') || [];
+                const filteredReflections = reflections.filter(ref => ref.week >= cutoffStr);
+                storage.set('reflections', filteredReflections);
+
+                console.log(`Data cleanup: Removed entries older than ${RETENTION_DAYS} days`);
+            }
+        };
+
+        // Chatbot configuration
+        let chatbotName = storage.get('chatbotName') || 'Mitra';
+        let chatHistory = storage.get('chatHistory') || [];
+
+        function editChatbotName() {
+            const nameElement = document.getElementById('chatbot-name-display');
+            nameElement.addEventListener('blur', saveChatbotName);
+            nameElement.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    nameElement.blur();
+                }
+            });
+        }
+
+        function saveChatbotName() {
+            const nameElement = document.getElementById('chatbot-name-display');
+            const newName = nameElement.textContent.trim();
+            if (newName && newName.length > 0 && newName.length < 20) {
+                chatbotName = newName;
+                storage.set('chatbotName', chatbotName);
+            } else {
+                nameElement.textContent = chatbotName;
+            }
+        }
+
+        function initializeChatbot() {
+            document.getElementById('chatbot-name-display').textContent = chatbotName;
+            loadChatHistory();
+            
+            // Add welcome message if first time
+            if (chatHistory.length === 0) {
+                const welcomeMessage = {
+                    type: 'bot',
+                    message: `Hi! I'm ${chatbotName}, your behavior coach. I analyze your time and money habits to help you improve. Ask me anything about your patterns!`,
+                    timestamp: new Date().toISOString()
+                };
+                addMessageToHistory(welcomeMessage);
+                displayMessage(welcomeMessage);
+            }
+        }
+
+        function loadChatHistory() {
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = '';
+            chatHistory.forEach(msg => displayMessage(msg));
+            scrollToBottom();
+        }
+
+        function addMessageToHistory(message) {
+            chatHistory.push(message);
+            // Keep last 100 messages
+            if (chatHistory.length > 100) {
+                chatHistory = chatHistory.slice(-100);
+            }
+            storage.set('chatHistory', chatHistory);
+        }
+
+        function displayMessage(message) {
+            const container = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message';
+            
+            const time = new Date(message.timestamp);
+            const timeStr = time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            
+            if (message.type === 'user') {
+                messageDiv.innerHTML = `
+                    <div style="flex: 1;"></div>
+                    <div>
+                        <div class="chat-bubble user-bubble">
+                            ${message.message}
+                            <div class="chat-timestamp">${timeStr}</div>
+                        </div>
+                    </div>
+                    <div class="chat-avatar user-avatar">👤</div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="chat-avatar bot-avatar">✨</div>
+                    <div>
+                        <div class="chat-bubble bot-bubble">
+                            ${message.message}
+                            <div class="chat-timestamp">${chatbotName} • ${timeStr}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('chat-messages');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const container = document.getElementById('chat-messages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'chat-message';
+            typingDiv.id = 'typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="chat-avatar bot-avatar">✨</div>
+                <div class="chat-bubble bot-bubble">
+                    <div class="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(typingDiv);
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // Add user message
+            const userMessage = {
+                type: 'user',
+                message: message,
+                timestamp: new Date().toISOString()
+            };
+            
+            addMessageToHistory(userMessage);
+            displayMessage(userMessage);
+            input.value = '';
+
+            // Show typing indicator
+            showTypingIndicator();
+
+            // Generate bot response
+            setTimeout(() => {
+                const botResponse = generateBotResponse(message);
+                hideTypingIndicator();
+                
+                const botMessage = {
+                    type: 'bot',
+                    message: botResponse,
+                    timestamp: new Date().toISOString()
+                };
+                
+                addMessageToHistory(botMessage);
+                displayMessage(botMessage);
+            }, 1000 + Math.random() * 1000);
+        }
+
+        function askQuickQuestion(question) {
+            document.getElementById('chat-input').value = question;
+            sendMessage();
+        }
+
+        function generateBotResponse(userMessage) {
+            const message = userMessage.toLowerCase();
+            
+            // Get current week data
+            const logs = storage.get('dailyLogs') || [];
+            const expenses = storage.get('expenses') || [];
+            const plans = storage.get('weeklyPlans') || [];
+            
+            const weekStart = formatDate(currentWeek);
+            const weekLogs = logs.filter(log => log.week === weekStart);
+            const weekExpenses = expenses.filter(exp => exp.week === weekStart);
+            const weekPlan = plans.find(p => p.week === weekStart);
+
+            // Week summary
+            if (message.includes('summary') || message.includes('week')) {
+                if (weekLogs.length === 0) {
+                    return "You haven't logged any days this week yet. Start tracking to see your patterns!";
+                }
+
+                const actualTotals = calculateActualTotals(weekLogs);
+                const totalSpent = weekExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+                const impulseCount = weekExpenses.filter(exp => exp.isImpulse).length;
+
+                return `📊 <strong>This Week (${weekLogs.length} days logged)</strong><br><br>
+                        <strong>Time Breakdown:</strong><br>
+                        • Study/Work: ${actualTotals.study.toFixed(1)}h<br>
+                        • Scroll/Entertainment: ${actualTotals.scroll.toFixed(1)}h<br>
+                        • Sleep: ${actualTotals.sleep.toFixed(1)}h<br>
+                        • Classes: ${actualTotals.classes.toFixed(1)}h<br><br>
+                        <strong>Money:</strong><br>
+                        • Total spent: ₹${totalSpent}<br>
+                        • Impulse purchases: ${impulseCount}<br><br>
+                        ${weekPlan ? `You planned ${weekPlan.study}h of study but logged ${actualTotals.study.toFixed(1)}h.` : ''}`;
+            }
+
+            // Time leaks analysis
+            if (message.includes('time leak') || message.includes('wasting time') || message.includes('distract')) {
+                if (weekLogs.length === 0) {
+                    return "I need some logged days to analyze your time usage. Log at least 2-3 days!";
+                }
+
+                const actualTotals = calculateActualTotals(weekLogs);
+                const avgScroll = actualTotals.scroll / weekLogs.length;
+                
+                let response = `⏰ <strong>Time Leak Analysis:</strong><br><br>`;
+                
+                if (avgScroll > 2) {
+                    response += `Your biggest leak is <strong>scroll/entertainment</strong> at ${actualTotals.scroll.toFixed(1)}h this week (${avgScroll.toFixed(1)}h/day).<br><br>`;
+                    response += `💡 Try: Set specific "scroll windows" - like 8-9pm only. This could free up ${((avgScroll - 1) * 7).toFixed(0)} hours per week!`;
+                } else if (actualTotals.social > 20) {
+                    response += `You're spending ${actualTotals.social.toFixed(1)}h on social/outings. While connection is important, consider if all of it aligns with your goals.`;
+                } else {
+                    response += `Your time usage looks pretty balanced! No major leaks detected. Keep it up! 🎉`;
+                }
+
+                return response;
+            }
+
+            // Spending analysis
+            if (message.includes('spending') || message.includes('money') || message.includes('expense')) {
+                const totalSpent = weekExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+                const impulseExpenses = weekExpenses.filter(exp => exp.isImpulse);
+                const impulseTotal = impulseExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+                if (totalSpent === 0) {
+                    return "No expenses logged this week. Log your spending to see patterns!";
+                }
+
+                let response = `💰 <strong>Spending Analysis:</strong><br><br>`;
+                response += `Total: ₹${totalSpent}<br>`;
+                response += `Impulse purchases: ${impulseExpenses.length} (₹${impulseTotal})<br><br>`;
+
+                if (impulseExpenses.length > 0) {
+                    const mostCommon = getMostCommonCategory(impulseExpenses);
+                    response += `Your impulse trigger: <strong>${mostCommon}</strong><br><br>`;
+                    response += `💡 Try the 24-hour rule: Wait a day before buying non-essentials. Could save ₹${(impulseTotal * 0.6).toFixed(0)}/week!`;
+                } else {
+                    response += `Excellent! All expenses were planned. You have great spending discipline! 🎯`;
+                }
+
+                return response;
+            }
+
+            // Actionable tips
+            if (message.includes('tip') || message.includes('advice') || message.includes('help') || message.includes('improve')) {
+                const actualTotals = weekLogs.length > 0 ? calculateActualTotals(weekLogs) : null;
+                const impulseCount = weekExpenses.filter(exp => exp.isImpulse).length;
+
+                if (actualTotals && actualTotals.scroll > 14) {
+                    return `💡 <strong>Your Top Priority:</strong> Reduce scroll time<br><br>
+                            Current: ${actualTotals.scroll.toFixed(1)}h/week<br>
+                            Target: 7h/week<br><br>
+                            <strong>Action:</strong> Delete one social media app from your home screen. Just one. You'll still have it, but that extra friction can cut usage by 40%.`;
+                } else if (weekPlan && actualTotals && actualTotals.study < weekPlan.study * 0.7) {
+                    return `💡 <strong>Your Top Priority:</strong> Study consistency<br><br>
+                            Planned: ${weekPlan.study}h<br>
+                            Actual: ${actualTotals.study.toFixed(1)}h<br><br>
+                            <strong>Action:</strong> Time-block your first 2 hours each day for deep work. No phone, no notifications. Just 2 hours of focused study before anything else.`;
+                } else if (impulseCount > 3) {
+                    return `💡 <strong>Your Top Priority:</strong> Impulse control<br><br>
+                            <strong>Action:</strong> Before any non-essential purchase, text yourself the item and price. Wait 24 hours. If you still want it tomorrow, buy it. This simple delay reduces impulse buying by 60%.`;
+                } else {
+                    return `💡 <strong>You're doing great!</strong><br><br>
+                            Your habits are balanced. To level up:<br><br>
+                            <strong>Time-box your mornings:</strong> First 90 minutes of the day for your most important task. No email, no messages. This one habit compounds into massive productivity gains.`;
+                }
+            }
+
+            // Motivation and encouragement
+            if (message.includes('motivat') || message.includes('discouraged') || message.includes('hard')) {
+                return `🌟 Remember: You're here, tracking your behavior. That's more than 95% of people do.<br><br>
+                        Small changes compound. If you improve just 1% each week, you'll be 50% better in a year.<br><br>
+                        Focus on one habit at a time. Don't try to fix everything at once. You've got this! 💪`;
+            }
+
+            // Sleep analysis
+            if (message.includes('sleep') || message.includes('tired')) {
+                if (weekLogs.length === 0) {
+                    return "Log your sleep hours for a few days, and I'll analyze your sleep patterns!";
+                }
+
+                const actualTotals = calculateActualTotals(weekLogs);
+                const avgSleep = actualTotals.sleep / weekLogs.length;
+
+                if (avgSleep < 6) {
+                    return `😴 <strong>Sleep Alert:</strong> You're averaging only ${avgSleep.toFixed(1)}h/night.<br><br>
+                            This impacts memory, focus, and decision-making. Try going to bed just 30 minutes earlier this week. Small step, big impact!`;
+                } else if (avgSleep > 9) {
+                    return `You're averaging ${avgSleep.toFixed(1)}h/night. While sleep is important, excessive sleep might indicate other issues. Consider sleep quality over quantity.`;
+                } else {
+                    return `Your sleep looks solid at ${avgSleep.toFixed(1)}h/night. Keep maintaining this! 😴✨`;
+                }
+            }
+
+            // Comparison with plan
+            if (message.includes('plan') || message.includes('goal') || message.includes('target')) {
+                if (!weekPlan) {
+                    return "You haven't set a weekly plan yet. Go to the Weekly Plan tab to set your targets!";
+                }
+
+                if (weekLogs.length === 0) {
+                    return "Log some days first, then I can compare your reality with your plan!";
+                }
+
+                const actualTotals = calculateActualTotals(weekLogs);
+                const studyDiff = weekPlan.study - actualTotals.study;
+                const studyPercent = ((actualTotals.study / weekPlan.study) * 100).toFixed(0);
+
+                let response = `🎯 <strong>Plan vs Reality:</strong><br><br>`;
+                response += `Study Target: ${weekPlan.study}h<br>`;
+                response += `Study Actual: ${actualTotals.study.toFixed(1)}h (${studyPercent}%)<br><br>`;
+
+                if (studyPercent >= 90) {
+                    response += `🎉 Outstanding! You're hitting your targets!`;
+                } else if (studyPercent >= 70) {
+                    response += `Good effort! You're ${studyDiff.toFixed(1)}h short. Try blocking specific time slots.`;
+                } else {
+                    response += `You're ${studyDiff.toFixed(1)}h behind target. Let's identify what's taking that time and make a specific plan to reclaim it.`;
+                }
+
+                return response;
+            }
+
+            // Default responses
+            const defaultResponses = [
+                `I can help you understand your time and money patterns! Try asking:<br>
+                 • "Show me this week's summary"<br>
+                 • "What are my time leaks?"<br>
+                 • "Analyze my spending"<br>
+                 • "Give me a tip to improve"`,
+                `I'm here to help you build better habits! Ask me about your time usage, spending patterns, or how to improve specific areas.`,
+                `Think of me as your accountability partner. I analyze your logged data and give you honest, actionable feedback. What would you like to know?`
+            ];
+
+            return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+        }
+
+        function calculateActualTotals(weekLogs) {
+            const totals = {
+                study: 0,
+                classes: 0,
+                scroll: 0,
+                social: 0,
+                sleep: 0,
+                other: 0
+            };
+
+            weekLogs.forEach(log => {
+                Object.keys(totals).forEach(key => {
+                    totals[key] += log.data[key] || 0;
+                });
+            });
+
+            return totals;
+        }
+
+        function getMostCommonCategory(expenses) {
+            const counts = {};
+            expenses.forEach(exp => {
+                counts[exp.category] = (counts[exp.category] || 0) + 1;
+            });
+            return Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b, 'Unknown');
+        }
+
+        // Initialize current week
+        let currentWeek = getWeekStart(new Date());
+
+        function getWeekStart(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
+            return new Date(d.setDate(diff));
+        }
+
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function formatWeekDisplay(date) {
+            const options = { month: 'short', day: 'numeric', year: 'numeric' };
+            return `Week of ${date.toLocaleDateString('en-US', options)}`;
+        }
+
+        // Navigation
+        function showView(viewName) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(viewName).classList.add('active');
+            event.target.classList.add('active');
+
+            // Load data when switching views
+            if (viewName === 'daily') loadRecentLogs();
+            if (viewName === 'expenses') loadExpenses();
+            if (viewName === 'insights') {
+                initializeChatbot();
+                loadComparison();
+            }
+            if (viewName === 'reflection') loadReflections();
+        }
+
+        // Daily Log
+        function updateSlider(category) {
+            const value = document.getElementById(category).value;
+            document.getElementById(`${category}-value`).textContent = value;
+            
+            // Calculate total
+            const categories = ['study', 'classes', 'scroll', 'social', 'sleep', 'other'];
+            const total = categories.reduce((sum, cat) => {
+                return sum + parseFloat(document.getElementById(cat).value);
+            }, 0);
+            
+            document.getElementById('total-hours').textContent = total.toFixed(1);
+            
+            const warning = document.getElementById('hours-warning');
+            if (total > 24) {
+                warning.style.display = 'block';
+            } else {
+                warning.style.display = 'none';
+            }
+        }
+
+        function saveDailyLog() {
+            const categories = ['study', 'classes', 'scroll', 'social', 'sleep', 'other'];
+            const log = {
+                date: formatDate(new Date()),
+                week: formatDate(currentWeek),
+                data: {}
+            };
+
+            categories.forEach(cat => {
+                log.data[cat] = parseFloat(document.getElementById(cat).value);
+            });
+
+            const total = Object.values(log.data).reduce((a, b) => a + b, 0);
+            if (total > 24) {
+                alert('⚠️ Total hours exceed 24. Please adjust before saving.');
+                return;
+            }
+
+            storage.append('dailyLogs', log);
+            
+            // Reset form
+            categories.forEach(cat => {
+                document.getElementById(cat).value = 0;
+                updateSlider(cat);
+            });
+
+            alert('✅ Daily log saved successfully!');
+            loadRecentLogs();
+        }
+
+        function loadRecentLogs() {
+            const logs = storage.get('dailyLogs') || [];
+            const weekStart = formatDate(currentWeek);
+            const weekLogs = logs.filter(log => log.week === weekStart);
+
+            const container = document.getElementById('recent-logs');
+            
+            if (weekLogs.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><p>No logs for this week yet. Start tracking!</p></div>';
+                return;
+            }
+
+            container.innerHTML = weekLogs.map(log => {
+                const date = new Date(log.date);
+                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const total = Object.values(log.data).reduce((a, b) => a + b, 0);
+                
+                return `
+                    <div class="stat-card" style="margin-bottom: 16px;">
+                        <div style="font-weight: 700; color: var(--accent-time); margin-bottom: 8px;">
+                            ${dayName}, ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </div>
+                        <div style="font-size: 0.9rem; color: var(--text-secondary);">
+                            Study: ${log.data.study}h | Scroll: ${log.data.scroll}h | Sleep: ${log.data.sleep}h
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Expenses
+        function saveExpense() {
+            const amount = parseFloat(document.getElementById('expense-amount').value);
+            const category = document.getElementById('expense-category').value;
+            const isImpulse = document.getElementById('expense-impulse').checked;
+            const note = document.getElementById('expense-note').value;
+
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+
+            const expense = {
+                date: formatDate(new Date()),
+                week: formatDate(currentWeek),
+                amount,
+                category,
+                isImpulse,
+                note
+            };
+
+            storage.append('expenses', expense);
+
+            // Reset form
+            document.getElementById('expense-amount').value = '';
+            document.getElementById('expense-note').value = '';
+            document.getElementById('expense-impulse').checked = false;
+
+            alert('✅ Expense logged!');
+            loadExpenses();
+        }
+
+        function loadExpenses() {
+            const expenses = storage.get('expenses') || [];
+            const weekStart = formatDate(currentWeek);
+            const weekExpenses = expenses.filter(exp => exp.week === weekStart);
+
+            // Calculate stats
+            const totalSpent = weekExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+            const impulseExpenses = weekExpenses.filter(exp => exp.isImpulse);
+            const impulseTotal = impulseExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+            document.getElementById('total-spent').textContent = `₹${totalSpent}`;
+            document.getElementById('impulse-count').textContent = impulseExpenses.length;
+            document.getElementById('impulse-amount').textContent = `₹${impulseTotal}`;
+
+            // List expenses
+            const container = document.getElementById('expense-list');
+            
+            if (weekExpenses.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">💰</div><p>No expenses logged this week</p></div>';
+                return;
+            }
+
+            container.innerHTML = weekExpenses.reverse().map(exp => {
+                const date = new Date(exp.date);
+                return `
+                    <div class="expense-item">
+                        <div class="expense-info">
+                            <div class="expense-category">${exp.category}</div>
+                            <div class="expense-date">${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' })}</div>
+                            ${exp.note ? `<div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 4px;">${exp.note}</div>` : ''}
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <div class="expense-amount">₹${exp.amount}</div>
+                            <span class="expense-badge ${exp.isImpulse ? 'badge-impulse' : 'badge-planned'}">
+                                ${exp.isImpulse ? 'Impulse' : 'Planned'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Weekly Plan
+        function updatePlanDisplay() {
+            const fixed = parseFloat(document.getElementById('plan-fixed').value) || 0;
+            const study = parseFloat(document.getElementById('plan-study').value) || 0;
+            const sleep = parseFloat(document.getElementById('plan-sleep').value) || 0;
+            const remaining = 168 - fixed - study - sleep;
+
+            document.getElementById('display-fixed').textContent = `${fixed}h`;
+            document.getElementById('display-study').textContent = `${study}h`;
+            document.getElementById('display-sleep').textContent = `${sleep}h`;
+            document.getElementById('display-remaining').textContent = `${remaining}h`;
+        }
+
+        document.getElementById('plan-fixed').addEventListener('input', updatePlanDisplay);
+        document.getElementById('plan-study').addEventListener('input', updatePlanDisplay);
+        document.getElementById('plan-sleep').addEventListener('input', updatePlanDisplay);
+
+        function saveWeeklyPlan() {
+            const plan = {
+                week: formatDate(currentWeek),
+                fixed: parseFloat(document.getElementById('plan-fixed').value) || 0,
+                study: parseFloat(document.getElementById('plan-study').value) || 0,
+                sleep: parseFloat(document.getElementById('plan-sleep').value) || 0
+            };
+
+            const plans = storage.get('weeklyPlans') || [];
+            const existingIndex = plans.findIndex(p => p.week === plan.week);
+            
+            if (existingIndex >= 0) {
+                plans[existingIndex] = plan;
+            } else {
+                plans.push(plan);
+            }
+
+            storage.set('weeklyPlans', plans);
+            alert('✅ Weekly plan saved!');
+        }
+
+        // Week navigation
+        function changeWeek(direction) {
+            currentWeek = new Date(currentWeek);
+            currentWeek.setDate(currentWeek.getDate() + (direction * 7));
+            document.getElementById('week-display').textContent = formatWeekDisplay(currentWeek);
+            
+            // Reload data for new week
+            loadRecentLogs();
+            loadExpenses();
+        }
+
+        function loadComparison() {
+            const logs = storage.get('dailyLogs') || [];
+            const plans = storage.get('weeklyPlans') || [];
+            
+            const weekStart = formatDate(currentWeek);
+            const weekLogs = logs.filter(log => log.week === weekStart);
+            const weekPlan = plans.find(p => p.week === weekStart);
+
+            if (!weekPlan || weekLogs.length === 0) {
+                return;
+            }
+
+            const actualTotals = {
+                study: 0,
+                sleep: 0
+            };
+
+            weekLogs.forEach(log => {
+                actualTotals.study += log.data.study || 0;
+                actualTotals.sleep += log.data.sleep || 0;
+            });
+
+            const chartData = [
+                { label: 'Study/Work', planned: weekPlan.study, actual: actualTotals.study },
+                { label: 'Sleep', planned: weekPlan.sleep, actual: actualTotals.sleep },
+                { label: 'Fixed', planned: weekPlan.fixed, actual: weekPlan.fixed }
+            ];
+
+            const chart = document.getElementById('comparison-chart');
+            chart.innerHTML = chartData.map(item => {
+                const maxValue = Math.max(item.planned, item.actual, 1);
+                const plannedWidth = (item.planned / maxValue) * 100;
+                const actualWidth = (item.actual / maxValue) * 100;
+
+                return `
+                    <div class="chart-row">
+                        <div class="chart-label">${item.label}</div>
+                        <div class="chart-bars-wrapper">
+                            <div class="chart-bar chart-bar-planned" style="width: ${plannedWidth}%">
+                                <span class="chart-bar-value">${item.planned}h</span>
+                            </div>
+                            <div class="chart-bar chart-bar-actual" style="width: ${actualWidth}%">
+                                <span class="chart-bar-value">${item.actual.toFixed(1)}h</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Reflection
+        function saveReflection() {
+            const drift = document.getElementById('reflection-drift').value;
+            const change = document.getElementById('reflection-change').value;
+
+            if (!drift || !change) {
+                alert('Please fill in both reflection questions');
+                return;
+            }
+
+            const reflection = {
+                week: formatDate(currentWeek),
+                drift,
+                change,
+                date: new Date().toISOString()
+            };
+
+            storage.append('reflections', reflection);
+
+            document.getElementById('reflection-drift').value = '';
+            document.getElementById('reflection-change').value = '';
+
+            alert('✅ Reflection saved!');
+            loadReflections();
+        }
+
+        function loadReflections() {
+            const reflections = storage.get('reflections') || [];
+            const container = document.getElementById('past-reflections');
+
+            if (reflections.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = `
+                <h3 style="color: var(--accent-insight); margin-bottom: 20px;">Past Reflections</h3>
+                ${reflections.reverse().map(ref => {
+                    const date = new Date(ref.week);
+                    return `
+                        <div class="card" style="background: var(--bg-secondary); margin-bottom: 16px;">
+                            <div style="font-weight: 700; color: var(--accent-time); margin-bottom: 12px;">
+                                Week of ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </div>
+                            <div style="margin-bottom: 12px;">
+                                <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 4px;">What caused drift:</div>
+                                <div style="color: var(--text-primary);">${ref.drift}</div>
+                            </div>
+                            <div>
+                                <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 4px;">Committed change:</div>
+                                <div style="color: var(--accent-money); font-weight: 600;">${ref.change}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            `;
+        }
+
+        // Initialize
+        document.getElementById('week-display').textContent = formatWeekDisplay(currentWeek);
+        updatePlanDisplay();
+        loadRecentLogs();
+        loadExpenses();
+        
+        // Run cleanup on load
+        storage.cleanup();
+        
+        // Show data retention info on first load
+        if (!storage.get('hasSeenRetentionInfo')) {
+            console.log(`✅ Time Paisa Manager initialized. Data retention: ${RETENTION_DAYS} days`);
+            storage.set('hasSeenRetentionInfo', true);
+        }
+    </script>
+</body>
+</html>
